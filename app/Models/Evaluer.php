@@ -4,13 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Locataire extends Model
+class Evaluer extends Model
 {
     //
 
     protected $fillable = [
         "idLocataire",
-        "adresseMail",
-        "numTel"
+        "idAnnonce",
+        "note"
     ];
 }

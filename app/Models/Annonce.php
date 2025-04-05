@@ -4,14 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class AgentImmobilier extends Model
+class Annonce extends Model
 {
     //
 
     public $timestamps = false;
     protected $fillable = [
-        "idAgent",
-        "adressemail",
-        "numTel"
+        "idAnnonce",
+        "libelle",
+        "idAgent"
     ];
 }
