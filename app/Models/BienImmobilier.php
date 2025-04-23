@@ -15,6 +15,9 @@ class BienImmobilier extends Model
         "montant",
         "type",
         "datePublication",
+        "surface",
+        "nombreChambres",
+        "nombreSalleBains",
         "idAgent"
     ];
 }
