@@ -18,6 +18,7 @@ class BienImmobilier extends Model
         "surface",
         "nombreChambres",
         "nombreSalleBains",
-        "idAgent"
+        "idAgent",
+        "idAdmin"
     ];
 }
