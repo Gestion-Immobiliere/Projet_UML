@@ -55,6 +55,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f8f4ed] via-[#f1e8d9] to-[#e8d5b5] p-4">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden transition-all duration-500 hover:shadow-3xl">
+        {/* En-tête avec effet de profondeur */}
         <div className="relative h-40 bg-gradient-to-r from-primary-600 to-primary-700 overflow-hidden">
           <div className="absolute inset-0 bg-[url('/texture.png')] opacity-10 mix-blend-overlay"></div>
           <div className="relative z-10 h-full flex flex-col items-center justify-center p-6 text-center">
@@ -77,6 +78,7 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Champ Email */}
             <div className="space-y-1">
               <label htmlFor="email" className="block text-sm font-medium text-gray-700/90">
                 Adresse email
@@ -99,6 +101,7 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Champ Mot de passe */}
             <div className="space-y-1">
               <label htmlFor="password" className="block text-sm font-medium text-gray-700/90">
                 Mot de passe
@@ -129,6 +132,7 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Options */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
@@ -143,13 +147,14 @@ export default function LoginPage() {
               </div>
 
               <Link 
-                href="/auth/forgot-password" 
+                href="/auth/verify-mail" 
                 className="text-sm font-medium text-primary-600 hover:text-primary-500 transition-colors hover:underline underline-offset-4"
               >
                 Mot de passe oublié ?
               </Link>
             </div>
 
+            {/* Bouton de connexion */}
             <div className="pt-2">
               <button
                 type="submit"
@@ -170,6 +175,7 @@ export default function LoginPage() {
             </div>
           </form>
 
+          {/* Lien vers inscription */}
           <div className="pt-6 text-center">
             <p className="text-sm text-gray-600/90">
               Nouveau sur DakarImmo ?{' '}
