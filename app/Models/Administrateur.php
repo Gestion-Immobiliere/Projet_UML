@@ -2,17 +2,34 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Notifications\Notifiable;
 
-class Administrateur extends Model
+class Administrateur extends Authenticatable
 {
+    use HasApiTokens, Notifiable;
 
+    protected $table = 'administrateurs';
+    protected $primaryKey = 'idAdmin';
     public $timestamps = false;
+
     protected $fillable = [
-        'idAdmin',
         'adresseMail',
-        'numTel',
         'motDePasse',
+        'numTel',
     ];
-    
+
+    protected $hidden = [
+        'motDePasse',
+        'remember_token',
+    ];
+
+    /**
+     * Indique à Laravel d'utiliser la colonne motDePasse comme password.
+     */
+    public function getAuthPassword()
+    {
+        return $this->motDePasse;
+    }
 }
