@@ -43,8 +43,10 @@ CREATE TABLE IF NOT EXISTS `bien_immobiliers` (
   `type` text COLLATE utf8mb4_unicode_ci,
   `datePublication` date DEFAULT NULL,
   `idAgent` int NOT NULL,
+  `idAdmin` int NOT NULL,
   PRIMARY KEY (`idImmobilier`),
-  FOREIGN KEY (`idAgent`) REFERENCES `utilisateurs`(`idUser`)
+  FOREIGN KEY (`idAgent`) REFERENCES `utilisateurs`(`idUser`),
+  FOREIGN KEY (`idAdmin`) REFERENCES `utilisateurs`(`idUser`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
