@@ -11,6 +11,11 @@ class BienImmobilier extends Model
     public $timestamps = false;
     protected $fillable = [
         "idImmobilier",
+        "titre",
+        "description",
+        "image",
+        "localisation",
+        "statut",
         "adresse",
         "montant",
         "type",

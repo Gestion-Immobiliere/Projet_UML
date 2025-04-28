@@ -4,15 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Administrateur extends Model
+class Utilisateur extends Model
 {
-
-    public $timestamps = false;
+    //
     protected $fillable = [
-        'idAdmin',
+        'idUser',
+        'nom',
+        'prenom',
         'adresseMail',
-        'numTel',
         'motDePasse',
+        'numTel',
+        'role'
     ];
-    
 }
