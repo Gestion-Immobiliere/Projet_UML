@@ -13,12 +13,12 @@ class AuthUtilisateursController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'nom' => 'required|string|max:50',
-            'prenom' => 'required|string|max:50',
-            'adresseMail' => 'required|email|unique:utilisateurs,adresseMail',
-            'motDePasse' => 'required|string|min:6|confirmed', // motDePasse_confirmation requis dans la requête
-            'numTel' => 'nullable|string',
-            'role' => 'required|in:locataire,agent_immobilier,admin'
+            'firstName' => 'required|string|max:50',
+            'lastName' => 'required|string|max:50',
+            'email' => 'required|email|unique:utilisateurs,adresseMail',
+            'password' => 'required|string|min:6|confirmed:confirmPassword', // motDePasse_confirmation requis dans la requête
+            'phone' => 'nullable|string',
+            'userType' => 'required|in:locataire,agent_immobilier,admin'
         ]);
 
         if ($validator->fails()) {
@@ -26,12 +26,12 @@ class AuthUtilisateursController extends Controller
         }
 
         $utilisateur = Utilisateur::create([
-            'nom' => $request->nom,
-            'prenom' => $request->prenom,
-            'adresseMail' => $request->adresseMail,
-            'motDePasse' => bcrypt($request->motDePasse),
-            'numTel' => $request->numTel,
-            'role' => $request->role,
+            'nom' => $request->firstName,
+            'prenom' => $request->lastName,
+            'adresseMail' => $request->email,
+            'motDePasse' => bcrypt($request->password),
+            'numTel' => $request->phone,
+            'role' => $request->userType,
         ]);
 
         $token = $utilisateur->createToken('auth_token')->plainTextToken;
