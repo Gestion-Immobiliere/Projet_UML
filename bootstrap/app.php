@@ -23,6 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
+            //Enregistrement du middleware checkrole
+            'checkRole' => \App\Http\Middleware\CheckRole::class,
         ]);
 
         //
