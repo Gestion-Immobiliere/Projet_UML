@@ -16,7 +16,7 @@ class AuthUtilisateursController extends Controller
             'firstName' => 'required|string|max:50',
             'lastName' => 'required|string|max:50',
             'email' => 'required|email|unique:utilisateurs,adresseMail',
-            'password' => 'required|string|min:6|confirmed:confirmPassword', // motDePasse_confirmation requis dans la requête
+            'password' => 'required|string|min:6', // motDePasse_confirmation requis dans la requête
             'phone' => 'nullable|string',
             'userType' => 'required|in:locataire,agent_immobilier,admin'
         ]);

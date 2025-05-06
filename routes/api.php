@@ -49,11 +49,14 @@ Route::post('/utilisateurs/forgot-password', [PasswordResetController::class, 'f
 Route::post('/utilisateurs/reset-password', [PasswordResetController::class, 'reset']);
 
 //Routes pour la gestion des biens immobiliers 
-Route::prefix('BienImmobilier')->group(function () {
-    Route::get('/', [BienImmobilierController::class, 'index']);
-    Route::post('/', [BienImmobilierController::class, 'store'])->middleware('auth:sanctum', 'checkRole:agent_immobilier,admin');
-    Route::get('/{id}', [BienImmobilierController::class, 'show']);
-    Route::put('/{id}', [BienImmobilierController::class, 'update'])->middleware('auth:sanctum', 'checkRole:agent_immobilier,admin');
-    Route::delete('/{id}', [BienImmobilierController::class, 'destroy'])->middleware('auth:sanctum', 'checkRole:admin');
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::prefix('BienImmobilier')->group(function () {
+        Route::get('/', [BienImmobilierController::class, 'index']);
+        Route::get('/{id}', [BienImmobilierController::class, 'show']);
+        Route::post('/', [BienImmobilierController::class, 'store'])->middleware('checkRole:agent,admin');
+        Route::put('/{id}', [BienImmobilierController::class, 'update'])->middleware('checkRole:agent,admin');
+        Route::delete('/{id}', [BienImmobilierController::class, 'destroy'])->middleware('checkRole:admin');
+        Route::get('/filter', [BienImmobilierController::class, 'filter']);
+    });
 });
 Route::post('login', [UserController::class, 'login']);

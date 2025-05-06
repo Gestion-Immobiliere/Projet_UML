@@ -7,90 +7,114 @@ use Illuminate\Http\Request;
 
 class BienImmobilierController extends Controller
 {
-    // Afficher tous les biens (avec pagination)
-    public function index(Request $request)
+    // Lister tous les biens immobiliers
+    public function index()
     {
-        $biens = BienImmobilier::paginate(10);
-        return response()->json($biens);
+        return response()->json(BienImmobilier::all());
     }
 
-    // Ajouter un bien immobilier (réservé aux agents/admins)
+    // Afficher un bien immobilier par ID
+    public function show($id)
+    {
+        $bien = BienImmobilier::find($id);
+        if (!$bien) {
+            return response()->json(['message' => 'Bien immobilier non trouvé'], 404);
+        }
+        return response()->json($bien);
+    }
+
+    // Ajouter un bien immobilier (Agent/Admin uniquement)
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'titre' => 'required|string|max:255',
-            'description' => 'required|string',
-            'image' => 'nullable|string',
+            'titre' => 'required|string',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|max:2048',
             'localisation' => 'required|string',
-            'statut' => 'required|in:disponible,reservé,vendu',
+            'statut' => 'required|string',
             'adresse' => 'required|string',
             'montant' => 'required|numeric',
             'type' => 'required|string',
+            'datePublication' => 'required|date',
             'surface' => 'required|numeric',
             'nombreChambres' => 'required|integer',
             'nombreSalleBains' => 'required|integer',
             'idAgent' => 'required|integer',
-            'idAdmin' => 'nullable|integer',
+            'idAdmin' => 'required|integer',
         ]);
 
-        $bien = BienImmobilier::create(array_merge($validated, [
-            'datePublication' => now()
-        ]));
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('images', 'public');
+            $validated['image'] = "/storage/" . $path;
+        }
 
+        $bien = BienImmobilier::create($validated);
         return response()->json($bien, 201);
     }
 
-    // Afficher un bien spécifique
-    public function show($id)
-    {
-        $bien = BienImmobilier::find($id);
-
-        if (!$bien) {
-            return response()->json(['message' => 'Bien introuvable'], 404);
-        }
-
-        return response()->json($bien);
-    }
-
-    // Mettre à jour un bien immobilier
+    // Modifier un bien immobilier (Agent/Admin uniquement)
     public function update(Request $request, $id)
     {
         $bien = BienImmobilier::find($id);
-
         if (!$bien) {
-            return response()->json(['message' => 'Bien introuvable'], 404);
+            return response()->json(['message' => 'Bien immobilier non trouvé'], 404);
         }
 
         $validated = $request->validate([
-            'titre' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'image' => 'nullable|string',
+            'titre' => 'sometimes|string',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|max:2048',
             'localisation' => 'sometimes|string',
-            'statut' => 'sometimes|in:disponible,reservé,vendu',
+            'statut' => 'sometimes|string',
             'adresse' => 'sometimes|string',
             'montant' => 'sometimes|numeric',
             'type' => 'sometimes|string',
+            'datePublication' => 'sometimes|date',
             'surface' => 'sometimes|numeric',
             'nombreChambres' => 'sometimes|integer',
             'nombreSalleBains' => 'sometimes|integer',
+            'idAgent' => 'sometimes|integer',
+            'idAdmin' => 'sometimes|integer',
         ]);
 
-        $bien->update($validated);
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('images', 'public');
+            $validated['image'] = "/storage/" . $path;
+        }
 
+        $bien->update($validated);
         return response()->json($bien);
     }
 
-    // Supprimer un bien immobilier
+    // Supprimer un bien immobilier (Admin uniquement)
     public function destroy($id)
     {
         $bien = BienImmobilier::find($id);
-
         if (!$bien) {
-            return response()->json(['message' => 'Bien introuvable'], 404);
+            return response()->json(['message' => 'Bien immobilier non trouvé'], 404);
         }
 
         $bien->delete();
+        return response()->json(['message' => 'Bien immobilier supprimé avec succès']);
+    }
 
-        return response()->json(['message' => 'Bien supprimé avec succès']);
+    // Filtrer les biens immobiliers par type, statut ou localisation
+    public function filter(Request $request)
+    {
+        $query = BienImmobilier::query();
+
+        if ($request->has('type')) {
+            $query->where('type', $request->input('type'));
+        }
+
+        if ($request->has('statut')) {
+            $query->where('statut', $request->input('statut'));
+        }
+
+        if ($request->has('localisation')) {
+            $query->where('localisation', 'like', '%' . $request->input('localisation') . '%');
+        }
+
+        return response()->json($query->get());
     }
 }
