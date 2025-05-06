@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class BienImmobilier extends Model
 {
     //
-
+    protected $table = 'bien_immobiliers';
     public $timestamps = false;
     protected $fillable = [
         "idImmobilier",

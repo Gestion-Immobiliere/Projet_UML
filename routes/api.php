@@ -7,6 +7,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthUtilisateursController;
 use App\Http\Controllers\UtilisateursController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\BienImmobilierController;
 
 Route::middleware('auth:sanctum')->post('message', [ChatController::class, 'store']);
 
@@ -47,5 +48,15 @@ Route::middleware(['auth:sanctum', 'checkRole:locataire'])->group(function () {
 Route::post('/utilisateurs/forgot-password', [PasswordResetController::class, 'forgot']);
 Route::post('/utilisateurs/reset-password', [PasswordResetController::class, 'reset']);
 
-
+//Routes pour la gestion des biens immobiliers 
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::prefix('BienImmobilier')->group(function () {
+        Route::get('/', [BienImmobilierController::class, 'index']);
+        Route::get('/{id}', [BienImmobilierController::class, 'show']);
+        Route::post('/', [BienImmobilierController::class, 'store'])->middleware('checkRole:agent,admin');
+        Route::put('/{id}', [BienImmobilierController::class, 'update'])->middleware('checkRole:agent,admin');
+        Route::delete('/{id}', [BienImmobilierController::class, 'destroy'])->middleware('checkRole:admin');
+        Route::get('/filter', [BienImmobilierController::class, 'filter']);
+    });
+});
 Route::post('login', [UserController::class, 'login']);
