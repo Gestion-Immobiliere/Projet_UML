@@ -4,13 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Evaluer extends Model
+class Avis extends Model
 {
     //
+    protected $table = 'avis';
 
     protected $fillable = [
+        "idAvis",
         "idLocataire",
-        "idAnnonce",
+        "idImmobilier",
+        "commentaire", 
         "note"
     ];
 }

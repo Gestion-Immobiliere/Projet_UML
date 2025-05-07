@@ -35,6 +35,16 @@ CREATE TABLE IF NOT EXISTS `utilisateurs` (
   PRIMARY KEY (`idUser`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+
+DROP TABLE IF EXISTS `contrats`;
+CREATE TABLE IF NOT EXISTS `contrats` (
+  `idContrat` int NOT NULL AUTO_INCREMENT,
+  `dateCreation` date DEFAULT NULL,
+  `idAgent` int NOT NULL,
+  PRIMARY KEY (`idContrat`),
+  FOREIGN KEY (`idAgent`) REFERENCES `utilisateurs`(`idUser`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 DROP TABLE IF EXISTS `bien_immobiliers`;
 CREATE TABLE IF NOT EXISTS `bien_immobiliers` (
   `idImmobilier` int NOT NULL AUTO_INCREMENT,
@@ -44,34 +54,11 @@ CREATE TABLE IF NOT EXISTS `bien_immobiliers` (
   `datePublication` date DEFAULT NULL,
   `idAgent` int NOT NULL,
   `idAdmin` int NOT NULL,
+  `idContrat` int NOT NULL,
   PRIMARY KEY (`idImmobilier`),
   FOREIGN KEY (`idAgent`) REFERENCES `utilisateurs`(`idUser`),
+  FOREIGN KEY (`idContrat`) REFERENCES `utilisateurs`(`idContrat`),
   FOREIGN KEY (`idAdmin`) REFERENCES `utilisateurs`(`idUser`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-
-DROP TABLE IF EXISTS `annonces`;
-CREATE TABLE IF NOT EXISTS `annonces` (
-  `idAnnonce` int NOT NULL AUTO_INCREMENT,
-  `libelle` text COLLATE utf8mb4_unicode_ci,
-  `idAgent` int NOT NULL,
-  PRIMARY KEY (`idAnnonce`),
-  FOREIGN KEY (`idAgent`) REFERENCES `utilisateurs`(`idUser`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-
-DROP TABLE IF EXISTS `contrats`;
-CREATE TABLE IF NOT EXISTS `contrats` (
-  `idContrat` int NOT NULL AUTO_INCREMENT,
-  `dateCreation` date DEFAULT NULL,
-  `dateDebut` date DEFAULT NULL,
-  `dateFin` date DEFAULT NULL,
-  `dateMaj` date DEFAULT NULL,
-  `idLocataire` int NOT NULL,
-  `idAgent` int NOT NULL,
-  PRIMARY KEY (`idContrat`),
-  FOREIGN KEY (`idLocataire`) REFERENCES `utilisateurs`(`idUser`),
-  FOREIGN KEY (`idAgent`) REFERENCES `utilisateurs`(`idUser`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
@@ -80,22 +67,25 @@ CREATE TABLE IF NOT EXISTS `paiements` (
   `idPaiement` int NOT NULL AUTO_INCREMENT,
   `datePaiement` date DEFAULT NULL,
   `montant` decimal(10,2) DEFAULT NULL,
+  `dureeValidite` INT NOT NULL,
   `idLocataire` int NOT NULL,
-  `idContrat` int NOT NULL,
+  `idImmobilier` int NOT NULL,
   PRIMARY KEY (`idPaiement`),
   FOREIGN KEY (`idLocataire`) REFERENCES `utilisateurs`(`idUser`),
-  FOREIGN KEY (`idContrat`) REFERENCES `contrats`(`idContrat`)
+  FOREIGN KEY (`idImmobilier`) REFERENCES `bien_immobiliers`(`idImmobilier`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
-DROP TABLE IF EXISTS `evaluers`;
-CREATE TABLE IF NOT EXISTS `evaluers` (
+DROP TABLE IF EXISTS `avis`;
+CREATE TABLE IF NOT EXISTS `avis` (
+  `idAvis` int NOT NULL AUTO_INCREMENT,
   `idLocataire` int NOT NULL,
-  `idAnnonce` int NOT NULL,
+  `idImmobilier` int NOT NULL,
   `note` decimal(10,2) DEFAULT NULL,
-  PRIMARY KEY (`idLocataire`,`idAnnonce`),
+  `commentaire` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`idAvis`),
   FOREIGN KEY (`idLocataire`) REFERENCES `utilisateurs`(`idUser`),
-  FOREIGN KEY (`idAnnonce`) REFERENCES `annonces`(`idAnnonce`)
+  FOREIGN KEY (`idImmobilier`) REFERENCES `bien_immobiliers`(`idImmobilier`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 COMMIT;
 

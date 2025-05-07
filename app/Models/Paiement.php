@@ -13,6 +13,7 @@ class Paiement extends Model
         "datePaiement",
         "montant",
         "idLocataire",
-        "idContrat"
+        "idImmobilier",
+        "dureeValidite"
     ];
 }
