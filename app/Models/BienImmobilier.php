@@ -24,6 +24,7 @@ class BienImmobilier extends Model
         "nombreChambres",
         "nombreSalleBains",
         "idAgent",
-        "idAdmin"
+        "idAdmin",
+        "idContrat"
     ];
 }

@@ -12,10 +12,6 @@ class Contrat extends Model
     protected $fillable = [
         "idContrat",
         "dateCreation",
-        "dateDebut",
-        "dateFin",
-        "dateMaj",
-        "idLocataire",
         "idAgent"
     ];
 }
