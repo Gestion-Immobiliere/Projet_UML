@@ -10,6 +10,7 @@ use App\Http\Controllers\VerifyMailController;
 use App\Http\Controllers\UtilisateursController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\AuthUtilisateursController;
+use App\Http\Controllers\BienImmobilierController;
 
 Route::middleware('auth:sanctum')->post('message', [ChatController::class, 'store']);
 
@@ -58,3 +59,15 @@ Route::middleware(['auth:sanctum', 'checkRole:locataire'])->post('evaluate', [Ev
 
 //Route pour la reservation
 Route::middleware(['auth:sanctum', 'checkRole:locataire'])->post('reserve', [ReserveController::class, 'reserve']);
+
+//Routes pour la gestion des biens immobiliers 
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::prefix('BienImmobilier')->group(function () {
+        Route::get('/', [BienImmobilierController::class, 'index']);
+        Route::get('/{id}', [BienImmobilierController::class, 'show']);
+        Route::post('/', [BienImmobilierController::class, 'store'])->middleware('checkRole:agent,admin');
+        Route::put('/{id}', [BienImmobilierController::class, 'update'])->middleware('checkRole:agent,admin');
+        Route::delete('/{id}', [BienImmobilierController::class, 'destroy'])->middleware('checkRole:admin');
+        Route::get('/filter', [BienImmobilierController::class, 'filter']);
+    });
+});
