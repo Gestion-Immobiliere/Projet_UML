@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS `bien_immobiliers` (
   `idContrat` int NOT NULL,
   PRIMARY KEY (`idImmobilier`),
   FOREIGN KEY (`idAgent`) REFERENCES `utilisateurs`(`idUser`),
-  FOREIGN KEY (`idContrat`) REFERENCES `utilisateurs`(`idContrat`),
+  FOREIGN KEY (`idContrat`) REFERENCES `contrats`(`idContrat`),
   FOREIGN KEY (`idAdmin`) REFERENCES `utilisateurs`(`idUser`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
