@@ -65,8 +65,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::prefix('BienImmobilier')->group(function () {
         Route::get('/', [BienImmobilierController::class, 'index']);
         Route::get('/{id}', [BienImmobilierController::class, 'show']);
-        Route::post('/', [BienImmobilierController::class, 'store'])->middleware('checkRole:agent,admin');
-        Route::put('/{id}', [BienImmobilierController::class, 'update'])->middleware('checkRole:agent,admin');
+        Route::post('/', [BienImmobilierController::class, 'store'])->middleware('checkRole:agent_immobilier,admin');
+        Route::put('/{id}', [BienImmobilierController::class, 'update'])->middleware('checkRole:agent_immobilier,admin');
         Route::delete('/{id}', [BienImmobilierController::class, 'destroy'])->middleware('checkRole:admin');
         Route::get('/filter', [BienImmobilierController::class, 'filter']);
     });

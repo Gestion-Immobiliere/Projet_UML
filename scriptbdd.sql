@@ -7,7 +7,7 @@
 -- Version du serveur : 8.2.0
 -- Version de PHP : 8.2.13
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+
 START TRANSACTION;
 SET time_zone = "+00:00";
 
@@ -52,9 +52,9 @@ CREATE TABLE IF NOT EXISTS `bien_immobiliers` (
   `montant` decimal(10,2) DEFAULT NULL,
   `type` text COLLATE utf8mb4_unicode_ci,
   `datePublication` date DEFAULT NULL,
-  `idAgent` int NOT NULL,
-  `idAdmin` int NOT NULL,
-  `idContrat` int NOT NULL,
+  `idAgent` int DEFAULT NULL,
+  `idAdmin` int DEFAULT NULL,
+  `idContrat` int DEFAULT NULL,
   PRIMARY KEY (`idImmobilier`),
   FOREIGN KEY (`idAgent`) REFERENCES `utilisateurs`(`idUser`),
   FOREIGN KEY (`idContrat`) REFERENCES `contrats`(`idContrat`),
