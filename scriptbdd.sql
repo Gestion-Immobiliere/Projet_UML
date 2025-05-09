@@ -7,7 +7,7 @@
 -- Version du serveur : 8.2.0
 -- Version de PHP : 8.2.13
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+
 START TRANSACTION;
 SET time_zone = "+00:00";
 
@@ -23,70 +23,78 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 
+DROP TABLE IF EXISTS `avis`;
+DROP TABLE IF EXISTS `paiements`;
+DROP TABLE IF EXISTS `contrats`;
+DROP TABLE IF EXISTS `bien_immobiliers`;
 DROP TABLE IF EXISTS `utilisateurs`;
-CREATE TABLE IF NOT EXISTS `utilisateurs` (
-  `idUser` int NOT NULL AUTO_INCREMENT,
-  `nom` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `prenom` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `adresseMail` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `motDePasse` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `numTel` text COLLATE utf8mb4_unicode_ci,
-  `role` ENUM('locataire', 'agent_immobilier', 'admin') COLLATE utf8mb4_unicode_ci NOT NULL,
+
+-- Utilisateurs
+CREATE TABLE `utilisateurs` (
+  `idUser` INT NOT NULL AUTO_INCREMENT,
+  `nom` VARCHAR(50) NOT NULL,
+  `prenom` VARCHAR(50) NOT NULL,
+  `adresseMail` VARCHAR(50) DEFAULT NULL,
+  `motDePasse` VARCHAR(255) NOT NULL,
+  `numTel` TEXT,
+  `role` ENUM('locataire', 'agent_immobilier', 'admin') NOT NULL,
   PRIMARY KEY (`idUser`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
-DROP TABLE IF EXISTS `contrats`;
-CREATE TABLE IF NOT EXISTS `contrats` (
-  `idContrat` int NOT NULL AUTO_INCREMENT,
-  `dateCreation` date DEFAULT NULL,
-  `idAgent` int NOT NULL,
-  PRIMARY KEY (`idContrat`),
-  FOREIGN KEY (`idAgent`) REFERENCES `utilisateurs`(`idUser`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-DROP TABLE IF EXISTS `bien_immobiliers`;
-CREATE TABLE IF NOT EXISTS `bien_immobiliers` (
-  `idImmobilier` int NOT NULL AUTO_INCREMENT,
-  `adresse` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `montant` decimal(10,2) DEFAULT NULL,
-  `type` text COLLATE utf8mb4_unicode_ci,
-  `datePublication` date DEFAULT NULL,
-  `idAgent` int NOT NULL,
-  `idAdmin` int NOT NULL,
-  `idContrat` int NOT NULL,
+-- Biens immobiliers
+CREATE TABLE `bien_immobiliers` (
+  `idImmobilier` INT NOT NULL AUTO_INCREMENT,
+  `adresse` VARCHAR(50) DEFAULT NULL,
+  `montant` DECIMAL(10,2) DEFAULT NULL,
+  `type` TEXT,
+  `datePublication` DATE DEFAULT NULL,
+  `idAgent` INT DEFAULT NULL,
+  `idAdmin` INT DEFAULT NULL,
   PRIMARY KEY (`idImmobilier`),
   FOREIGN KEY (`idAgent`) REFERENCES `utilisateurs`(`idUser`),
-  FOREIGN KEY (`idContrat`) REFERENCES `contrats`(`idContrat`),
   FOREIGN KEY (`idAdmin`) REFERENCES `utilisateurs`(`idUser`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Contrats (créée après bien_immobiliers)
+CREATE TABLE `contrats` (
+  `idContrat` INT NOT NULL AUTO_INCREMENT,
+  `dateCreation` DATE DEFAULT NULL,
+  `idAgent` INT NOT NULL,
+  `idLocataire` INT NOT NULL,
+  `idBien` INT NOT NULL,
+  `accepte` BOOLEAN DEFAULT FALSE,
+  `cheminPdf` VARCHAR(255) DEFAULT NULL,
+  PRIMARY KEY (`idContrat`),
+  FOREIGN KEY (`idAgent`) REFERENCES `utilisateurs`(`idUser`),
+  FOREIGN KEY (`idLocataire`) REFERENCES `utilisateurs`(`idUser`),
+  FOREIGN KEY (`idBien`) REFERENCES `bien_immobiliers`(`idImmobilier`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-DROP TABLE IF EXISTS `paiements`;
-CREATE TABLE IF NOT EXISTS `paiements` (
-  `idPaiement` int NOT NULL AUTO_INCREMENT,
-  `datePaiement` date DEFAULT NULL,
-  `montant` decimal(10,2) DEFAULT NULL,
+-- Paiements
+CREATE TABLE `paiements` (
+  `idPaiement` INT NOT NULL AUTO_INCREMENT,
+  `datePaiement` DATE DEFAULT NULL,
+  `montant` DECIMAL(10,2) DEFAULT NULL,
   `dureeValidite` INT NOT NULL,
-  `idLocataire` int NOT NULL,
-  `idImmobilier` int NOT NULL,
+  `idLocataire` INT NOT NULL,
+  `idImmobilier` INT NOT NULL,
   PRIMARY KEY (`idPaiement`),
   FOREIGN KEY (`idLocataire`) REFERENCES `utilisateurs`(`idUser`),
   FOREIGN KEY (`idImmobilier`) REFERENCES `bien_immobiliers`(`idImmobilier`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
-DROP TABLE IF EXISTS `avis`;
-CREATE TABLE IF NOT EXISTS `avis` (
-  `idAvis` int NOT NULL AUTO_INCREMENT,
-  `idLocataire` int NOT NULL,
-  `idImmobilier` int NOT NULL,
-  `note` decimal(10,2) DEFAULT NULL,
-  `commentaire` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+-- Avis
+CREATE TABLE `avis` (
+  `idAvis` INT NOT NULL AUTO_INCREMENT,
+  `idLocataire` INT NOT NULL,
+  `idImmobilier` INT NOT NULL,
+  `note` DECIMAL(10,2) DEFAULT NULL,
+  `commentaire` VARCHAR(200) NOT NULL,
   PRIMARY KEY (`idAvis`),
   FOREIGN KEY (`idLocataire`) REFERENCES `utilisateurs`(`idUser`),
   FOREIGN KEY (`idImmobilier`) REFERENCES `bien_immobiliers`(`idImmobilier`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
