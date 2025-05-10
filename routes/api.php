@@ -4,17 +4,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\FavorisController;
 use App\Http\Controllers\ReserveController;
 use App\Http\Controllers\EvaluateController;
 use App\Http\Controllers\VerifyMailController;
 use App\Http\Controllers\UtilisateursController;
 use App\Http\Controllers\PasswordResetController;
-use App\Http\Controllers\AuthUtilisateursController;
 use App\Http\Controllers\BienImmobilierController;
+use App\Http\Controllers\AuthUtilisateursController;
 
+//Route pour les messages
 Route::middleware('auth:sanctum')->post('message', [ChatController::class, 'store']);
+Route::middleware('auth:sanctum')->post('chat', [ChatController::class, 'index']);
 
-// Authentification pour Utilisateurs
+// Route pour les Utilisateurs
 Route::prefix('utilisateurs')->group(function () {
     Route::post('/register', [AuthUtilisateursController::class, 'register']);
     Route::post('/login', [AuthUtilisateursController::class, 'login']);
@@ -23,6 +26,8 @@ Route::prefix('utilisateurs')->group(function () {
         Route::post('/logout', [AuthUtilisateursController::class, 'logout']);
         Route::get('/profile', [UtilisateursController::class, 'profile']);
         Route::put('/profile', [UtilisateursController::class, 'updateProfile']);
+        Route::middleware('checkRole:locataire')->get('agent_immobilier', [UtilisateursController::class, 'getAgent']);
+        Route::middleware('checkRole:agent_immobilier')->get('locataire', [UtilisateursController::class, 'getLocataire']);
     });
 });
 
@@ -71,3 +76,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/filter', [BienImmobilierController::class, 'filter']);
     });
 });
+
+//Route pour la gestion des favoris
+Route::middleware(['auth:sanctum', 'checkRole:locataire'])->post('/add-favoris', [FavorisController::class, 'add']);
+Route::middleware(['auth:sanctum', 'checkRole:locataire'])->get('/get-favoris', [FavorisController::class, 'index']); 
+Route::middleware(['auth:sanctum', 'checkRole:locataire'])->delete('/delete-favoris', [FavorisController::class, 'destroy']); 

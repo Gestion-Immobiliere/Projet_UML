@@ -38,10 +38,33 @@ class MessageSent implements ShouldBroadcastNow
      * @return array<int, \Illuminate\Broadcasting\Channel>
      */
     public function broadcastOn(): array
+{
+    $minId = min($this->sender->idUser, $this->receiver->idUser);
+    $maxId = max($this->sender->idUser, $this->receiver->idUser);
+    return [
+        new PrivateChannel("chat.$minId.$maxId"),
+    ];
+}
+
+    public function broadcastWith()
     {
         return [
-            new PrivateChannel('chat.' . $this->receiver->id),
+            'id' => $this->message->id,  // ID du message
+            'message' => $this->message->message,  // Le contenu du message
+            'sender' => [
+                'id' => $this->sender->idUser,  // ID de l'expéditeur
+                'name' => $this->sender->nom,  // Nom de l'expéditeur
+            ],
+            'receiver' => [
+                'id' => $this->receiver->idUser
+            ],
+            'createdAt' => $this->message->created_at,  // Date et heure de création
         ];
+    }
+
+      public function broadcastAs()
+    {
+        return 'MessageSent'; // Sans namespace
     }
     
     

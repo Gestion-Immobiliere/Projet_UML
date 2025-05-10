@@ -27,20 +27,21 @@ class BienImmobilierController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'titre' => 'required|string',
+            'title' => 'required|string',
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:2048',
             'localisation' => 'required|string',
             'statut' => 'required|string',
-            'adresse' => 'required|string',
-            'montant' => 'required|numeric',
+            'address' => 'required|string',
+            'price' => 'required|numeric',
             'type' => 'required|string',
             'datePublication' => 'required|date',
-            'surface' => 'required|numeric',
-            'nombreChambres' => 'required|integer',
-            'nombreSalleBains' => 'required|integer',
+            'area' => 'required|numeric',
+            'bedRooms' => 'required|integer',
+            'bathrooms' => 'required|integer',
             'idAgent' => 'required|integer',
             'idAdmin' => 'required|integer',
+            'idContrat' => 'required|integer',
         ]);
 
         if ($request->hasFile('image')) {
