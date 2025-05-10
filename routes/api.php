@@ -12,6 +12,7 @@ use App\Http\Controllers\UtilisateursController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\BienImmobilierController;
 use App\Http\Controllers\AuthUtilisateursController;
+use App\Http\Controllers\ContratController;
 
 //Route pour les messages
 Route::middleware('auth:sanctum')->post('message', [ChatController::class, 'store']);
@@ -70,8 +71,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::prefix('BienImmobilier')->group(function () {
         Route::get('/', [BienImmobilierController::class, 'index']);
         Route::get('/{id}', [BienImmobilierController::class, 'show']);
-        Route::post('/', [BienImmobilierController::class, 'store'])->middleware('checkRole:agent,admin');
-        Route::put('/{id}', [BienImmobilierController::class, 'update'])->middleware('checkRole:agent,admin');
+        Route::post('/', [BienImmobilierController::class, 'store'])->middleware('checkRole:agent_immobilier,admin');
+        Route::put('/{id}', [BienImmobilierController::class, 'update'])->middleware('checkRole:agent_immobilier,admin');
         Route::delete('/{id}', [BienImmobilierController::class, 'destroy'])->middleware('checkRole:admin');
         Route::get('/filter', [BienImmobilierController::class, 'filter']);
     });
@@ -81,3 +82,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
 Route::middleware(['auth:sanctum', 'checkRole:locataire'])->post('/add-favoris', [FavorisController::class, 'add']);
 Route::middleware(['auth:sanctum', 'checkRole:locataire'])->get('/get-favoris', [FavorisController::class, 'index']); 
 Route::middleware(['auth:sanctum', 'checkRole:locataire'])->delete('/delete-favoris', [FavorisController::class, 'destroy']); 
+
+//Routes pour les contrats
+Route::middleware(['auth:sanctum', 'checkRole:agent_immobilier,admin'])->post('/contrats', [ContratController::class, 'store']);
+//Validation du contrat (case à cocher)
+Route::middleware(['auth:sanctum', 'checkRole:locataire'])->put('/contrats/{id}/accepter', [ContratController::class, 'accepter']);
+//Route pour telecharger le pdf
+Route::middleware(['auth:sanctum', 'checkRole:admin,agent_immobilier,locataire'])
+    ->get('/contrats/{id}/telecharger', [ContratController::class, 'telecharger']);

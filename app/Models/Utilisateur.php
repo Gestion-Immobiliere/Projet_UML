@@ -12,6 +12,9 @@ class Utilisateur extends Authenticatable
 
     protected $table = 'utilisateurs';
     protected $primaryKey = 'idUser';
+    protected $keyType = 'int';
+    public $incrementing = true;
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -25,5 +28,10 @@ class Utilisateur extends Authenticatable
     public function getAuthPassword()
     {
         return $this->motDePasse;
+    }
+
+    public function getIdAttribute()
+    {
+        return $this->attributes['idUser'];
     }
 }
