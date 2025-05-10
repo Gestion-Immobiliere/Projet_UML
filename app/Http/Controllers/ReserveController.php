@@ -16,13 +16,16 @@ class ReserveController extends Controller
         if (Paiement::where('idImmobilier', $request->id_bien)->exist()) {
             return response()->json([
                 'message' => 'Ce bien est deja reserve'
-            ]);
+            ], 400);
         } else {
-            Paiement::create([
+            $reserve = Paiement::create([
                 'idImmobilier' => $request->id_bien,
                 'idLocatire' => $user->idUser,
                 'datePaiement' => now()
             ]);
         }
+        return response()->json([
+            'message' => $reserve
+        ], 200);
     }
 }

@@ -53,7 +53,8 @@ class AuthUtilisateursController extends Controller
             return response()->json(['message' => 'Identifiants invalides'], 401);
         }
         
-        $token = $utilisateur->createToken('auth_token')->plainTextToken;
+      
+        $token = $utilisateur->createToken('auth_token', ['*'], now()->addMinutes(60))->plainTextToken;
 
         $cookie = cookie('auth_token', $token, 60, null, null, true, true, false, 'None');
 
@@ -61,7 +62,8 @@ class AuthUtilisateursController extends Controller
             'message' => 'Connexion réussie',
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'role' => $utilisateur->role
+            'role' => $utilisateur->role,
+            'id' => $utilisateur->idUser,
         ])->cookie($cookie);
     }
 
