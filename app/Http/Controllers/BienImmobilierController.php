@@ -24,6 +24,7 @@ class BienImmobilierController extends Controller
     }
 
     // Ajouter un bien immobilier (Agent/Admin uniquement)
+    /*
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -52,6 +53,8 @@ class BienImmobilierController extends Controller
         $bien = BienImmobilier::create($validated);
         return response()->json($bien, 201);
     }
+    
+    */
 
     // Modifier un bien immobilier (Agent/Admin uniquement)
     public function update(Request $request, $id)

@@ -46,9 +46,9 @@ class AuthUtilisateursController extends Controller
             'email' => 'required|email',
             'password' => 'required'
         ]);
-
+        
         $utilisateur = Utilisateur::where('adresseMail', $request->email)->first();
-
+        
         if (!$utilisateur || !Hash::check($request->password, $utilisateur->motDePasse)) {
             return response()->json(['message' => 'Identifiants invalides'], 401);
         }
