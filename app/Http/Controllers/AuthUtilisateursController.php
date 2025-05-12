@@ -16,7 +16,7 @@ class AuthUtilisateursController extends Controller
             'nom' => 'required|string|max:50',
             'prenom' => 'required|string|max:50',
             'adresseMail' => 'required|email|unique:utilisateurs,adresseMail',
-            'motDePasse' => 'required|string|min:6|confirmed:confirmPassword', // motDePasse_confirmation requis dans la requête
+            'motDePasse' => 'required|string|min:6', // motDePasse_confirmation requis dans la requête
             'numTel' => 'nullable|string',
             'role' => 'required|in:locataire,agent_immobilier,admin'
         ]);
@@ -52,8 +52,10 @@ class AuthUtilisateursController extends Controller
         if (!$utilisateur || !Hash::check($request->password, $utilisateur->motDePasse)) {
             return response()->json(['message' => 'Identifiants invalides'], 401);
         }
-
+        
+      
         $token = $utilisateur->createToken('auth_token', ['*'], now()->addMinutes(60))->plainTextToken;
+
         $cookie = cookie('auth_token', $token, 60, null, null, true, true, false, 'None');
 
         return response()->json([
