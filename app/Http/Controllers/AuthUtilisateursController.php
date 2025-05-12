@@ -43,13 +43,13 @@ class AuthUtilisateursController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'adresseMail' => 'required|email',
-            'motDePasse' => 'required'
+            'email' => 'required|email',
+            'password' => 'required'
         ]);
         
-        $utilisateur = Utilisateur::where('adresseMail', $request->adresseMail)->first();
+        $utilisateur = Utilisateur::where('adresseMail', $request->email)->first();
         
-        if (!$utilisateur || !Hash::check($request->motDePasse, $utilisateur->motDePasse)) {
+        if (!$utilisateur || !Hash::check($request->password, $utilisateur->motDePasse)) {
             return response()->json(['message' => 'Identifiants invalides'], 401);
         }
         
