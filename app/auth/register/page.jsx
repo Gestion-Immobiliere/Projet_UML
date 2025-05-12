@@ -143,11 +143,11 @@ export default function RegisterPage() {
                     <User className="h-5 w-5" />
                   </div>
                   <input
-                    id="nom"
-                    name="nom"
+                    id="prenom"
+                    name="prenom"
                     type="text"
                     required
-                    value={formData.nom}
+                    value={formData.prenom}
                     onChange={handleChange}
                     onFocus={() => setActiveField('nom')}
                     onBlur={() => setActiveField('')}
@@ -163,11 +163,11 @@ export default function RegisterPage() {
                 </label>
                 <div className={`relative group transition-all duration-300 ${activeField === 'prenom' ? 'scale-[1.01]' : ''}`}>
                   <input
-                    id="prenom"
-                    name="prenom"
+                    id="nom"
+                    name="nom"
                     type="text"
                     required
-                    value={formData.prenom}
+                    value={formData.nom}
                     onChange={handleChange}
                     onFocus={() => setActiveField('prenom')}
                     onBlur={() => setActiveField('')}

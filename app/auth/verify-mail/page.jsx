@@ -15,7 +15,14 @@ export default function VerifyMailPage() {
         setError("");
         setSuccess("");
         try {
-            const response = await fetch(`http:.../${email}`);
+            const response = await fetch("http://127.0.0.1:8000/api/verify-mail", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json', 
+                    'Accept': 'application/json' 
+                },
+                body: JSON.stringify({ email})
+            });
             const data = await response.json();
             if (!response.ok) {
                 setError(data.message);

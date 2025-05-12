@@ -1,6 +1,8 @@
 'use client';
 
 import { Lock, Eye, EyeOff, RefreshCw } from 'lucide-react';
+import { useRouter } from 'next/navigation';    
+import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 export default function ForgotPasswordPage() {
     const [showPassword, setShowPassword] = useState(false);
@@ -8,6 +10,9 @@ export default function ForgotPasswordPage() {
     const [success, setSuccess] = useState("");
     const [isVerifying, setIsVerifying] = useState(false)
     const [showConfirmPassword, setConfirmPassword] = useState(false);
+    const searchParams = useSearchParams();
+    const token = searchParams.get("token");
+    const router = useRouter();
     const [formData, setFormData] = useState ({
         password : "",
         newpassword : ""
@@ -30,19 +35,21 @@ export default function ForgotPasswordPage() {
         formDataToSend.append("password", formData.password);
         formDataToSend.append("newpassword", formData.newpassword);
         try {
-            const response = await fetch("http/.../", {
+            const response = await fetch(`http://127.0.0.1:8000/api/utilisateurs/reset-password/${token}`, {
                 method : "POST",
-                body: formDataToSend,
                 headers: {
-                    Accept: "application/json",
+                    'Accept' : "application/json",
                 },
+                body: formDataToSend,
+                
             });
             const data = await response.json();
             if (!response.ok) {
                 setError(data.message);
                 return;
             }
-            setSuccess("Un message a été envoyé a votre adresse email!");
+            setSuccess("Mot de passe modifié avec succes!");
+            setTimeout(() => router.push('/auth/login'), 1500);
             setFormData({
                 password : "",
                 newpassword : ""

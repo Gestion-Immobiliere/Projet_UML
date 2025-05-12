@@ -3,89 +3,113 @@ import { Paperclip, Send, Search, MoreVertical, ChevronLeft, Smile, Mic, Message
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Avatar from '@/components/ui/avatar';
+import '@/hooks/echo';
 
 export default function MessagesPage() {
-  const [conversations, setConversations] = useState([
-    {
-      id: 1,
-      name: "M. NDIAYE (Propriétaire)",
-      lastMessage: "Le loyer a bien été reçu, merci",
-      time: "10:30",
-      unread: 0,
-      avatar: "/avatars/proprietaire.jpg",
-      online: true
-    },
-    {
-      id: 2,
-      name: "Agence ImmoPlus",
-      lastMessage: "Votre état des lieux est programmé pour le 15/06",
-      time: "Hier",
-      unread: 2,
-      avatar: "/avatars/agence.jpg",
-      online: false
-    },
-    {
-      id: 3,
-      name: "Service Technique",
-      lastMessage: "Votre problème de plomberie sera résolu demain",
-      time: "Lundi",
-      unread: 0,
-      avatar: "/avatars/technique.jpg",
-      online: true
-    }
-  ]);
-
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
   const messagesEndRef = useRef(null);
-
+  const [token, setToken] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [conversations, setConversations] = useState([]);
   const filteredConversations = conversations.filter(conv =>
     conv.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   useEffect(() => {
-    if (activeConversation) {
-      const demoMessages = [
-        { 
-          id: 1, 
-          text: "Bonjour, je vous contacte concernant le loyer de ce mois-ci.", 
-          sender: "user", 
-          time: "10:00",
-          date: "Aujourd'hui"
-        },
-        { 
-          id: 2, 
-          text: "Oui, je vous écoute.", 
-          sender: "recipient", 
-          time: "10:02",
-          date: "Aujourd'hui"
-        },
-        { 
-          id: 3, 
-          text: "Le loyer a bien été versé ce matin.", 
-          sender: "user", 
-          time: "10:05",
-          date: "Aujourd'hui"
-        },
-        { 
-          id: 4, 
-          text: "Je viens de vérifier, effectivement c'est reçu. Merci !", 
-          sender: "recipient", 
-          time: "10:30",
-          date: "Aujourd'hui",
-          read: true
-        },
-      ];
-      setMessages(demoMessages);
-      
-      setConversations(conv => conv.map(c => 
-        c.id === activeConversation ? {...c, unread: 0} : c
-      ));
+    setToken(sessionStorage.getItem('auth_token'));
+    setUserId(sessionStorage.getItem('user_id'));
+  }, []);
+
+  useEffect(() => {
+    const fetchAgents = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/utilisateurs/locataire', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept' : 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        // Transformez les agents en conversations
+        const locatairesAsConversations = data.map(locataire => ({
+          id: locataire.idUser,
+          name: `${locataire.prenom} ${locataire.nom}`,
+          lastMessage: "Contactez-moi pour vos besoins immobiliers", // Message par défaut
+          time: "", // À adapter si vous avez la date du dernier message
+          unread: 0, // À adapter si vous suivez les messages non lus
+          avatar: "/avatars/agent.jpg", // Photo de profil ou image par défaut
+          online: false // Statut de connexion (à adapter si disponible)
+        }));
+        
+        setConversations(locatairesAsConversations);
+        
+      } catch (error) {
+        console.error("Erreur chargement agents:", error);
+        // En cas d'erreur, conservez les conversations vides
+      }
+    };
+  
+    if (token) {
+      fetchAgents();
     }
-  }, [activeConversation]);
+  }, [token]);
+  
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!activeConversation) return;
+  
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/api/chat`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+              'Accept' : 'application/json'
+            },
+            body: JSON.stringify({
+              conversation_id: activeConversation,  // Le `conversation_id` est l'ID de la conversation active
+            }),
+          }
+        );
+  
+        if (!response.ok) {
+          throw new Error('Erreur lors de la récupération des messages');
+        }
+  
+        const messages = await response.json();
+        // Transformation des messages API vers le format de votre UI
+        const formattedMessages = messages.map(message => ({
+          id: message.id,
+          text: message.message,
+          sender: message.from_id == userId ? 'owner' : 'tenant',
+          time: new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          date: new Date(message.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'numeric', year: 'numeric' }),
+          read: 'read',
+        }));
+       
+  
+        setMessages(formattedMessages);
+        
+        // Mise à jour des conversations (marquer comme lus)
+        setConversations(conv => conv.map(c => 
+          c.id === activeConversation ? {...c, unread: 0} : c
+        ));
+  
+      } catch (error) {
+        console.error("Erreur:", error);
+        // Optionnel: Afficher un message à l'utilisateur
+      }
+    };
+  
+    fetchMessages();
+  }, [activeConversation, token]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -104,19 +128,45 @@ export default function MessagesPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
+    const receiverId = activeConversation;
     if (newMessage.trim() === "") return;
     
-    const newMsg = {
-      id: messages.length + 1,
-      text: newMessage,
-      sender: "user",
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      date: "Aujourd'hui"
-    };
-    
+    try {
+
+      const response = await fetch('http://127.0.0.1:8000/api/message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization' : `Bearer ${token}`, // Ajout du token pour l'authentification
+          'Accept' : 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: receiverId,  // Identifiant du destinataire
+          from: userId,  // Identifiant de l'utilisateur actuel (expéditeur)
+          message: newMessage,  // Message envoyé
+          conversation_id: receiverId,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'envoi du message');
+      }
+
+      const data = await response.json();
+      const newMsg = {
+        id: data.id,  
+        text: newMessage,
+        sender: data.sender == userId ? 'owner' : 'tenant',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        date: data.createdAt,  // Date du message (peut être ajustée si nécessaire)
+      };
+
     setMessages([...messages, newMsg]);
-    setNewMessage("");
+    setNewMessage("");  // Réinitialisation de l'input
+
+    } catch (error) {
+      console.error("Erreur d'envoi :", error); // Gestion des erreurs
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -126,6 +176,47 @@ export default function MessagesPage() {
     }
   };
 
+ useEffect(() => {
+  const minId = Math.min(userId, activeConversation);
+  const maxId = Math.max(userId, activeConversation);
+  if (!userId) {
+    console.log('userId not loaded yet:', userId);
+    return;
+  }
+
+   if (!activeConversation) {
+    console.log('userId not loaded yet:', userId);
+    return;
+  }
+
+  if (!window.Echo) {
+    console.error('Echo not initialized');
+    return;
+  }
+
+  console.log(`✅ Subscribing to chat.${userId}`);
+
+  const channel = window.Echo.private(`chat.${minId}.${maxId}`);
+  
+  channel.listen('.MessageSent', (data) => {
+    console.log('📩 Message received:', data);
+     if (data.sender.id == activeConversation) {
+    setMessages(prev => [...prev, {
+      id: data.id,
+      text: data.message,
+      sender: data.sender.id === userId ? 'owner' : 'tenant',
+      time: new Date(data.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      date: new Date(data.createdAt).toLocaleDateString('fr-FR')
+    }]);
+  }
+  });
+
+  return () => {
+    console.log('🧹 Unsubscribing from channel');
+    channel.stopListening('.MessageSent');
+    window.Echo.leave(`chat.${userId}`);
+  };
+}, [userId, activeConversation]); // Se ré-exécute uniquement quand userId change // On retire echo des dépendances
   return (
     <div className="flex h-[calc(100vh-64px)] bg-white">
       <div className={`bg-gray-50 border-r border-gray-200 w-full md:w-96 flex-shrink-0 ${isMobileView && activeConversation ? 'hidden' : 'block'}`}>
@@ -227,7 +318,7 @@ export default function MessagesPage() {
               {messages.map((message, index) => {
                 const showDate = index === 0 || messages[index-1].date !== message.date;
                 return (
-                  <>
+                    <div key={`message-${message.id}-${index}`}> 
                     {showDate && (
                       <div key={`date-${message.id}`} className="flex justify-center">
                         <span className="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full">
@@ -237,17 +328,17 @@ export default function MessagesPage() {
                     )}
                     <div
                       key={message.id}
-                      className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                      className={`flex ${message.sender === 'owner' ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-xs md:max-w-md rounded-lg px-4 py-2 ${message.sender === 'user' 
+                        className={`max-w-xs md:max-w-md rounded-lg px-4 py-2 ${message.sender === 'owner' 
                           ? 'bg-blue-500 text-white rounded-br-none' 
                           : 'bg-white border border-gray-200 rounded-bl-none'}`}
                       >
                         <p className="text-sm">{message.text}</p>
-                        <div className={`flex items-center justify-end mt-1 space-x-1 ${message.sender === 'user' ? 'text-blue-100' : 'text-gray-400'}`}>
+                        <div className={`flex items-center justify-end mt-1 space-x-1 ${message.sender === 'owner' ? 'text-blue-100' : 'text-gray-400'}`}>
                           <span className="text-xs">{message.time}</span>
-                          {message.sender === 'user' && (
+                          {message.sender === 'owner' && (
                             message.read ? (
                               <span className="text-xs">✓✓</span>
                             ) : (
@@ -257,7 +348,7 @@ export default function MessagesPage() {
                         </div>
                       </div>
                     </div>
-                  </>
+                    </div> 
                 );
               })}
               <div ref={messagesEndRef} />

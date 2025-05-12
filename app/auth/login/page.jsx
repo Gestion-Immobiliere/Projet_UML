@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
 import { Lock, Mail, Loader2, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 
@@ -13,7 +12,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const { login } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -29,20 +27,29 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('http://127.0.0.1:8000/api/utilisateurs/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json', 
+          'Accept': 'application/json' 
+        },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
+      sessionStorage.setItem('auth_token', data.access_token)
+      sessionStorage.setItem('user_id', data.id);
 
       if (!response.ok) {
         throw new Error(data.message || 'Identifiants incorrects');
       }
-
-      login(data.user, data.token);
-      router.push('/dashboard');
+      if (data.access_token) {
+        if(data.role == 'locataire' && data?.access_token) {
+          router.push('/dashboard/tenant');
+      } else {
+        router.push('/dashboard/owner');
+      }
+      } 
     } catch (err) {
       if (isMounted) {
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
