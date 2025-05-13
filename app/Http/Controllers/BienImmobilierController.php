@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BienImmobilier;
 use Illuminate\Http\Request;
+use App\Models\BienImmobilier;
+use Illuminate\Support\Facades\Log;
 
 class BienImmobilierController extends Controller
 {
@@ -24,7 +25,7 @@ class BienImmobilierController extends Controller
     }
 
     // Ajouter un bien immobilier (Agent/Admin uniquement)
-    /*
+    
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -42,15 +43,16 @@ class BienImmobilierController extends Controller
             'nombreSalleBains' => 'required|integer',
         ]);
     
-        $user = auth()->user();
-        //\Log::info('Role connecté : ' . $user->role);
+        // $user = auth()->user();
+        $user = $request->user();
+        Log::info('Role connecté : ' . $user->role);
     
         if ($user->role === 'admin') {
             $validated['idAdmin'] = $user->id;
         } elseif ($user->role === 'agent_immobilier') {
             $validated['idAgent'] = $user->id;
         }
-        \Log::info('idAdmin injecté : ' . ($validated['idAdmin'] ?? 'non défini'));
+        Log::info('idAdmin injecté : ' . ($validated['idAdmin'] ?? 'non défini'));
 
     
         if (!isset($validated['idAdmin']) && !isset($validated['idAgent'])) {
@@ -65,16 +67,16 @@ class BienImmobilierController extends Controller
             $path = $request->file('image')->store('images', 'public');
             $validated['image'] = "/storage/" . $path;
         }
-        \Log::info('Contenu de $validated', $validated);
-        \Log::info('User connecté', ['id' => $user->id, 'role' => $user->role]);
-        \Log::info('Validated final', $validated);
+        Log::info('Contenu de $validated', $validated);
+        Log::info('User connecté', ['id' => $user->id, 'role' => $user->role]);
+        Log::info('Validated final', $validated);
         
     
         $bien = BienImmobilier::create($validated);
         return response()->json($bien, 201);
     }
     
-    */
+    
 
     // Modifier un bien immobilier (Agent/Admin uniquement)
     public function update(Request $request, $id)
