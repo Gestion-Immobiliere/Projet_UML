@@ -14,7 +14,7 @@ import {
   FiUser,
   FiPlus
 } from 'react-icons/fi';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const ownerLinks = [
   { href: '/dashboard/owner', icon: <FiHome size={18} />, label: 'Tableau de bord' },
@@ -30,6 +30,35 @@ export default function OwnerSidebar() {
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(true);
   const [activeSubmenu, setActiveSubmenu] = useState(null);
+  const[token, setToken] = useState(null);
+  const[nom, setNom] = useState("");
+  const[prenom, setPrenom] = useState("");
+
+   useEffect(() => {
+      setToken(sessionStorage.getItem('auth_token'));
+    }, []);
+  
+    useEffect(() => {
+      const getInfos = async () => {
+        try {
+          const response = await fetch('http://127.0.0.1:8000/api/utilisateurs/profile', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+              'Accept' : 'application/json'
+            }
+          });
+          const data = await response.json();
+          setNom(data.nom);
+          setPrenom(data.prenom);
+        } catch (error) {
+          console.error("Erreur chargement agents:", error);
+        }
+      };
+      if (token) {
+        getInfos();
+      }
+    }, [token])
 
   const toggleSubmenu = (menu) => {
     setActiveSubmenu(activeSubmenu === menu ? null : menu);
@@ -123,7 +152,7 @@ export default function OwnerSidebar() {
                 <FiUser className="text-blue-600" />
               </div>
               <div className="flex-1">
-                <p className="font-medium">Jules SAGNA</p>
+                <p className="font-medium">{prenom} {nom}</p>
                 <p className="text-xs text-gray-500">Propriétaire</p>
               </div>
             </div>

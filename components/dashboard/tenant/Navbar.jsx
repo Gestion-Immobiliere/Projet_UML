@@ -51,14 +51,15 @@ export default function Navbar({ user }) {
                 <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
                   <User className="text-blue-600" size={16} />
                 </div>
-                <span className="hidden md:inline text-sm font-medium">{user?.name || 'Mon compte'}</span>
+                <span className="hidden md:inline text-sm font-medium">{user.name}</span>
                 <ChevronDown className={`hidden md:inline transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} size={16} />
               </button>
 
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-100">
                   <div className="px-4 py-2 border-b">
-                    <p className="text-sm font-medium">{user?.name}</p>
+                    <p className="text-sm font-medium">{user.name}</p>
+                    <p className="text-xs py-1.5 text-gray-500">{user.email}</p>
                     <p className="text-xs text-gray-500">Locataire</p>
                   </div>
                   <Link 

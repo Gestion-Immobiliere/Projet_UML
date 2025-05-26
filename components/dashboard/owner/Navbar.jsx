@@ -63,8 +63,8 @@ export default function Navbar({ user }) {
                 >
                   <div className="py-1">
                     <div className="px-4 py-2">
-                      <p className="text-sm font-medium">{user?.name || 'Utilisateur'}</p>
-                      <p className="text-xs text-gray-500">{user?.email || 'proprietaire@example.com'}</p>
+                      <p className="text-sm font-medium">{user.name}</p>
+                      <p className="text-xs text-gray-500">{user.email}</p>
                     </div>
                     
                     <Link href="/profile" className="flex items-center px-4 py-2 text-sm hover:bg-gray-50">
