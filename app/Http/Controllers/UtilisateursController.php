@@ -10,7 +10,12 @@ class UtilisateursController extends Controller
     // Voir son profil
     public function profile(Request $request)
     {
-        return response()->json($request->user());
+        $user = $request->user();
+        return response()->json([
+            'nom' => $user->nom,
+            'prenom' => $user->prenom,
+            'email' => $user->adresseMail
+        ]);
     }
 
     // Mettre à jour son profil
