@@ -2,22 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\BienImmobilier;
-use Illuminate\Support\Facades\Log;
+use App\Models\Image;
+use Illuminate\Http\Request;
 
 class BienImmobilierController extends Controller
 {
     // Lister tous les biens immobiliers
     public function index()
     {
-        return response()->json(BienImmobilier::all());
+        return response()->json(BienImmobilier::with('images')->get());
     }
 
     // Afficher un bien immobilier par ID
     public function show($id)
     {
-        $bien = BienImmobilier::find($id);
+        $bien = BienImmobilier::with('images')->find($id);
         if (!$bien) {
             return response()->json(['message' => 'Bien immobilier non trouvé'], 404);
         }
@@ -25,13 +25,13 @@ class BienImmobilierController extends Controller
     }
 
     // Ajouter un bien immobilier (Agent/Admin uniquement)
-    
     public function store(Request $request)
     {
         $validated = $request->validate([
             'titre' => 'required|string',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:2048',
+            'images' => 'nullable|array',
+            'images.*' => 'image|max:2048',
             'localisation' => 'required|string',
             'statut' => 'required|string',
             'adresse' => 'required|string',
@@ -42,41 +42,31 @@ class BienImmobilierController extends Controller
             'nombreChambres' => 'required|integer',
             'nombreSalleBains' => 'required|integer',
         ]);
-    
-        // $user = auth()->user();
-        $user = $request->user();
-        Log::info('Role connecté : ' . $user->role);
-    
+
+        $user = auth()->user();
+
         if ($user->role === 'admin') {
             $validated['idAdmin'] = $user->id;
         } elseif ($user->role === 'agent_immobilier') {
             $validated['idAgent'] = $user->id;
         }
-        Log::info('idAdmin injecté : ' . ($validated['idAdmin'] ?? 'non défini'));
 
-    
         if (!isset($validated['idAdmin']) && !isset($validated['idAgent'])) {
             return response()->json(['message' => 'Seuls les agents ou les admins peuvent créer un bien.'], 403);
         }
-    
-        if (!isset($validated['idContrat'])) {
-            $validated['idContrat'] = null;
-        }
-    
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('images', 'public');
-            $validated['image'] = "/storage/" . $path;
-        }
-        Log::info('Contenu de $validated', $validated);
-        Log::info('User connecté', ['id' => $user->id, 'role' => $user->role]);
-        Log::info('Validated final', $validated);
-        
-    
+
         $bien = BienImmobilier::create($validated);
-        return response()->json($bien, 201);
+
+        // Gérer les images multiples
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('images', 'public');
+                $bien->images()->create(['chemin' => '/storage/' . $path]);
+            }
+        }
+
+        return response()->json($bien->load('images'), 201);
     }
-    
-    
 
     // Modifier un bien immobilier (Agent/Admin uniquement)
     public function update(Request $request, $id)
@@ -89,7 +79,6 @@ class BienImmobilierController extends Controller
         $validated = $request->validate([
             'titre' => 'sometimes|string',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:2048',
             'localisation' => 'sometimes|string',
             'statut' => 'sometimes|string',
             'adresse' => 'sometimes|string',
@@ -99,17 +88,21 @@ class BienImmobilierController extends Controller
             'surface' => 'sometimes|numeric',
             'nombreChambres' => 'sometimes|integer',
             'nombreSalleBains' => 'sometimes|integer',
-            'idAgent' => 'sometimes|integer',
-            'idAdmin' => 'sometimes|integer',
+            'images' => 'nullable|array',
+            'images.*' => 'image|max:2048',
         ]);
 
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('images', 'public');
-            $validated['image'] = "/storage/" . $path;
+        $bien->update($validated);
+
+        // Ajouter de nouvelles images si présentes
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('images', 'public');
+                $bien->images()->create(['chemin' => '/storage/' . $path]);
+            }
         }
 
-        $bien->update($validated);
-        return response()->json($bien);
+        return response()->json($bien->load('images'));
     }
 
     // Supprimer un bien immobilier (Admin uniquement)
@@ -127,7 +120,7 @@ class BienImmobilierController extends Controller
     // Filtrer les biens immobiliers par type, statut ou localisation
     public function filter(Request $request)
     {
-        $query = BienImmobilier::query();
+        $query = BienImmobilier::with('images');
 
         if ($request->has('type')) {
             $query->where('type', $request->input('type'));
