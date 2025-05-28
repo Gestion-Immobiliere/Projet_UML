@@ -63,13 +63,13 @@ export default function Navbar({ user }) {
                     <p className="text-xs text-gray-500">Locataire</p>
                   </div>
                   <Link 
-                    href="/profile" 
+                    href="/dashboard/tenant/profile" 
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     Mon profil
                   </Link>
                   <Link 
-                    href="/settings" 
+                    href="/dashboard/tenant/settings" 
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     Paramètres
