@@ -29,4 +29,8 @@ class BienImmobilier extends Model
         'idAdmin',
         
     ];
+    public function images()
+{
+    return $this->hasMany(Image::class, 'bien_id');
+}
 }
