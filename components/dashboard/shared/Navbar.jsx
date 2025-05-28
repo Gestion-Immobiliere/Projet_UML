@@ -67,11 +67,11 @@ export default function Navbar({ user }) {
                       <p className="text-xs text-gray-500">{user?.email || 'admin@example.com'}</p>
                     </div>
                     
-                    <Link href="/profile" className="flex items-center px-4 py-2 text-sm hover:bg-gray-50">
+                    <Link href="/dashboard/admin/profile" className="flex items-center px-4 py-2 text-sm hover:bg-gray-50">
                       <FiUser className="mr-2" /> Profil
                     </Link>
                     
-                    <Link href="/settings" className="flex items-center px-4 py-2 text-sm hover:bg-gray-50">
+                    <Link href="/dashboard/admin/settings" className="flex items-center px-4 py-2 text-sm hover:bg-gray-50">
                       <FiSettings className="mr-2" /> Paramètres
                     </Link>
                     
