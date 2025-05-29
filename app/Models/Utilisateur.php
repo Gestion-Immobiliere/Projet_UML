@@ -34,4 +34,8 @@ class Utilisateur extends Authenticatable
     {
         return $this->attributes['idUser'];
     }
+
+    public function biens() {
+        return $this->hasMany(BienImmobilier::class, 'idAgent', 'idUser');
+    }
 }
