@@ -11,27 +11,33 @@ class UtilisateursController extends Controller
     public function profile(Request $request)
     {
         $user = $request->user();
+        $user->load('biens');
+        $properties = $user->biens->count();
         return response()->json([
             'nom' => $user->nom,
             'prenom' => $user->prenom,
-            'email' => $user->adresseMail
+            'email' => $user->adresseMail,
+            'telephone' => $user->numTel,
+            'propriete' => $properties
         ]);
     }
 
     // Mettre à jour son profil
-    public function updateProfile(Request $request)
-    {
+    public function updateProfile(Request $request){
         $user = $request->user();
-
-        $data = $request->validate([
-            'nom' => 'sometimes|string|max:50',
-            'prenom' => 'sometimes|string|max:50',
-            'numTel' => 'sometimes|string',
+        $request->validate([
+            'email' => 'sometimes|string|max:50',
+            'phone' => 'sometimes|string|max:50',
         ]);
-
-        $user->update($data);
-
-        return response()->json(['message' => 'Profil mis à jour', 'user' => $user]);
+        $user->update([
+            'adresseMail' => $request->email,
+            'numTel' => $request->phone
+        ]);
+        return response()->json( [
+            'message' => 'Profil mis à jour', 
+            'email' => $user->adresseMail,
+            'telephone' => $user->numTel
+        ]);
     }
 
     public function getAgent() {
