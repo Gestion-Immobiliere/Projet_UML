@@ -28,6 +28,7 @@ export default function CreatePropertyPage() {
     nombreSalleBains: 1,
     surface: '',
     statut: false,
+    localisation: '',
     images: []
   });
   const [uploading, setUploading] = useState(false);
@@ -116,6 +117,7 @@ export default function CreatePropertyPage() {
       form.append('adresse', formData.adresse); 
       form.append('nombreChambres', formData.nombreChambres);
       form.append('nombreSalleBains', formData.nombreSalleBains);
+       form.append('localisation', formData.localisation);
       form.append('surface', formData.surface); 
       form.append('statut', formData.statut ? '1' : '0');
       formData.images.forEach((file, index) => {
@@ -262,10 +264,23 @@ export default function CreatePropertyPage() {
                 name="nombreSalleBains"
                 value={formData.nombreSalleBains}
                 onChange={handleChange}
-                min="1"
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Localisation*</label>
+                <input
+                  type="text"
+                  name="localisation"
+                  value={formData.localisation}
+                  onChange={handleChange}
+                  min="1"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Localisation du bien"
+                  required
+                />
             </div>
 
             <div className="space-y-1">
