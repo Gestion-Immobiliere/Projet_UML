@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   FiSave, 
   FiX, 
@@ -17,16 +17,17 @@ import Link from 'next/link';
 export default function CreatePropertyPage() {
   const router = useRouter();
   const fileInputRef = useRef(null);
+  const [token, setToken] = useState(null);
   const [formData, setFormData] = useState({
-    title: '',
+    titre: '',
     description: '',
     type: 'appartement',
-    price: '',
-    address: '',
-    bedrooms: 1,
-    bathrooms: 1,
-    area: '',
-    published: false,
+    montant: '',
+    adresse: '',
+    nombreChambres: 1,
+    nombreSalleBains: 1,
+    surface: '',
+    statut: false,
     images: []
   });
   const [uploading, setUploading] = useState(false);
@@ -38,7 +39,11 @@ export default function CreatePropertyPage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleImageUpload = async (e) => {
+  useEffect(() => {
+    setToken(sessionStorage.getItem('auth_token'));
+  }, []);
+
+  const handleImageUpload = (e) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -46,54 +51,37 @@ export default function CreatePropertyPage() {
       setError('Vous ne pouvez pas ajouter plus de 10 photos');
       return;
     }
-
     setUploading(true);
     setError('');
 
     try {
-      const uploadPromises = Array.from(files).map(async (file) => {
+      const validFiles = [];
+      const previews = [];
+
+      for (let file of files) {
         if (file.size > 5 * 1024 * 1024) {
-          throw new Error(`L'image ${file.name} est trop volumineuse (max 5MB)`);
+          setError(`L'image ${file.name} est trop volumineuse (max 5MB)`);
+          setUploading(false);
+          return;
         }
-
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET);
-        formData.append('folder', 'property_images');
-
-        const response = await fetch(
-          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-          {
-            method: 'POST',
-            body: formData
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error('Échec du téléchargement');
-        }
-
-        return await response.json();
-      });
-
-      const results = await Promise.all(uploadPromises);
-      const uploadedUrls = results.map(result => result.secure_url);
+        validFiles.push(file);
+        previews.push(URL.createObjectURL(file));
+      }
 
       setFormData(prev => ({
         ...prev,
-        images: [...prev.images, ...uploadedUrls]
+        images: [...prev.images, ...validFiles] // ← fichiers à envoyer au back
       }));
 
-      const newPreviews = Array.from(files).map(file => URL.createObjectURL(file));
-      setPreviewImages(prev => [...prev, ...newPreviews]);
-
+      setPreviewImages(prev => [...prev, ...previews]);
     } catch (err) {
       console.error('Upload error:', err);
-      setError(err.message || 'Erreur lors du téléchargement des images');
+      setError(err.message || 'Erreur lors de l’ajout des images');
     } finally {
-      setUploading(false);
+    setUploading(false);
     }
   };
+
 
   const removeImage = (index) => {
     const newImages = [...formData.images];
@@ -120,12 +108,26 @@ export default function CreatePropertyPage() {
     }
 
     try {
-      const response = await fetch('/api/owner/properties', {
+      const form = new FormData();
+      form.append('titre', formData.titre);
+      form.append('description', formData.description);
+      form.append('type', formData.type);
+      form.append('montant', formData.montant);
+      form.append('adresse', formData.adresse); 
+      form.append('nombreChambres', formData.nombreChambres);
+      form.append('nombreSalleBains', formData.nombreSalleBains);
+      form.append('surface', formData.surface); 
+      form.append('statut', formData.statut ? '1' : '0');
+      formData.images.forEach((file, index) => {
+        form.append('images[]', file);
+      });
+      const response = await fetch('http://127.0.0.1:8000/api/BienImmobilier/store', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
         },
-        body: JSON.stringify(formData),
+        body: form,
       });
 
       if (!response.ok) {
@@ -177,8 +179,8 @@ export default function CreatePropertyPage() {
                 </div>
                 <input
                   type="text"
-                  name="title"
-                  value={formData.title}
+                  name="titre"
+                  value={formData.titre}
                   onChange={handleChange}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Titre du bien"
@@ -211,8 +213,8 @@ export default function CreatePropertyPage() {
                 </div>
                 <input
                   type="number"
-                  name="price"
-                  value={formData.price}
+                  name="montant"
+                  value={formData.montant}
                   onChange={handleChange}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Prix"
@@ -230,8 +232,8 @@ export default function CreatePropertyPage() {
                 </div>
                 <input
                   type="text"
-                  name="address"
-                  value={formData.address}
+                  name="adresse"
+                  value={formData.adresse}
                   onChange={handleChange}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Adresse complète"
@@ -244,8 +246,8 @@ export default function CreatePropertyPage() {
               <label className="block text-sm font-medium text-gray-700">Chambres*</label>
               <input
                 type="number"
-                name="bedrooms"
-                value={formData.bedrooms}
+                name="nombreChambres"
+                value={formData.nombreChambres}
                 onChange={handleChange}
                 min="1"
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -257,8 +259,8 @@ export default function CreatePropertyPage() {
               <label className="block text-sm font-medium text-gray-700">Salles de bain*</label>
               <input
                 type="number"
-                name="bathrooms"
-                value={formData.bathrooms}
+                name="nombreSalleBains"
+                value={formData.nombreSalleBains}
                 onChange={handleChange}
                 min="1"
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -274,8 +276,8 @@ export default function CreatePropertyPage() {
                 </div>
                 <input
                   type="number"
-                  name="area"
-                  value={formData.area}
+                  name="surface"
+                  value={formData.surface}
                   onChange={handleChange}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Superficie"
@@ -290,9 +292,9 @@ export default function CreatePropertyPage() {
               <div className="flex items-center">
                 <input
                   type="checkbox"
-                  name="published"
-                  checked={formData.published}
-                  onChange={(e) => setFormData({...formData, published: e.target.checked})}
+                  name="statut"
+                  checked={formData.statut}
+                  onChange={(e) => setFormData({...formData, statut: e.target.checked})}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <span className="ml-2 text-sm text-gray-700">Publier immédiatement</span>
