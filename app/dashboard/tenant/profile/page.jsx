@@ -1,16 +1,15 @@
 'use client';
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const TenantProfilePage = () => {
   const initialData = {
-    name: "Abdoulaye DIAW",
-    email: "abdoulaye.diaw@example.com",
-    phone: "+221 77 123 45 67",
-    currentProperty: "Appartement B12, Résidence Les Almadies",
-    leaseStart: "01/03/2023",
-    leaseEnd: "28/02/2024",
-    rentAmount: "150 000 FCFA/mois",
-    emergencyContact: "Aminata DIAW (+221 76 543 21 09)",
+    name: "",
+    email: "",
+    phone: "",
+    currentProperty: "",
+    leaseStart: "",
+    leaseEnd: "",
+    rentAmount: "",
   };
 
   const [tenantData, setTenantData] = useState(initialData);
@@ -19,6 +18,7 @@ const TenantProfilePage = () => {
   const [profileImage, setProfileImage] = useState("https://via.placeholder.com/150");
   const [tempImage, setTempImage] = useState(null);
   const fileInputRef = useRef(null);
+  const [token, setToken] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,6 +27,44 @@ const TenantProfilePage = () => {
       [name]: value
     });
   };
+
+  useEffect(() => {
+    setToken(sessionStorage.getItem('auth_token'));
+  }, []);
+
+  useEffect(() => {
+    setFormData(tenantData)
+  }, [tenantData]);
+
+  useEffect(() => {
+    const getInfos = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/utilisateurs/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept' : 'application/json'
+          }
+        });
+        const data = await response.json();
+        const intel = {
+          name: `${data.prenom} ${data.nom}`,
+          email: data.email,
+          phone: data.telephone,
+          currentProperty: "Appartement B12, Résidence Les Almadies",
+          leaseStart: "01/03/2023",
+          leaseEnd: "28/02/2024",
+          rentAmount: "150 000 FCFA/mois",
+        }
+          setTenantData(intel);
+          } catch (error) {
+            console.error("Erreur chargement agents:", error);
+          }
+        };
+        if (token) {
+          getInfos();
+        }
+      }, [token]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -43,15 +81,27 @@ const TenantProfilePage = () => {
     fileInputRef.current.click();
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setTenantData(formData);
+    const response = await fetch('http://127.0.0.1:8000/api/utilisateurs/update-profile', {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    });
+    const data = await response.json();
+    setTenantData(prev => ({
+      ...prev,
+      email: data.email,
+      phone: data.telephone,
+    }));
     if (tempImage) {
       setProfileImage(tempImage);
       setTempImage(null);
     }
     setIsEditing(false);
-    console.log('Données mises à jour:', formData);
   };
 
   const handleCancel = () => {
@@ -117,10 +167,6 @@ const TenantProfilePage = () => {
                     <label className="block text-sm font-medium text-gray-500 mb-1">Téléphone</label>
                     <p className="bg-gray-50 p-3 rounded-md">{tenantData.phone}</p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Contact d'urgence</label>
-                    <p className="bg-gray-50 p-3 rounded-md">{tenantData.emergencyContact}</p>
-                  </div>
                 </div>
               </div>
 
@@ -167,9 +213,10 @@ const TenantProfilePage = () => {
                     <input
                       type="text"
                       name="name"
+                      disabled
                       value={formData.name}
                       onChange={handleChange}
-                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-3 border border-gray-300 rounded-md bg-gray-100 focus:ring-blue-500 focus:border-blue-500 cursor-not-allowed"
                     />
                   </div>
                   <div>
@@ -188,16 +235,6 @@ const TenantProfilePage = () => {
                       type="tel"
                       name="phone"
                       value={formData.phone}
-                      onChange={handleChange}
-                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Contact d'urgence</label>
-                    <input
-                      type="text"
-                      name="emergencyContact"
-                      value={formData.emergencyContact}
                       onChange={handleChange}
                       className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                     />

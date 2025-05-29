@@ -1,22 +1,61 @@
 'use client';
 import { FiUser, FiMail, FiPhone, FiHome, FiCalendar, FiEdit, FiSave, FiX, FiCamera } from 'react-icons/fi';
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function OwnerProfile() {
   const [editMode, setEditMode] = useState(false);
+  const [token, setToken] = useState(null);
   const [ownerData, setOwnerData] = useState({
-    name: "Moussa Diallo",
-    email: "m.diallo@immo.sn",
-    phone: "+221 77 654 32 10",
-    propertiesCount: "5",
-    memberSince: "Janvier 2021",
-    lastPayment: "05/11/2023",
-    profileImage: "https://via.placeholder.com/150"
+    name: "",
+    email: "",
+    phone: "",
+    propertiesCount: "",
+    memberSince: "",
+    lastPayment: "",
+    profileImage: null
   });
   
-  const [formData, setFormData] = useState({...ownerData});
+  const [formData, setFormData] = useState(ownerData);
   const [tempImage, setTempImage] = useState(null);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    setToken(sessionStorage.getItem('auth_token'));
+  }, []);
+
+  useEffect(() => {
+    setFormData(ownerData);
+  }, [ownerData]);
+  
+  useEffect(() => {
+    const getInfos = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/utilisateurs/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept' : 'application/json'
+            }
+          });
+        const data = await response.json();
+        const intel = {
+          name: `${data.prenom} ${data.nom}`,
+          email: data.email,
+          phone: data.telephone,
+          propertiesCount: data.propriete,
+          memberSince: "Janvier 2021",
+          lastPayment: "05/11/2023",
+          profileImage: "https://via.placeholder.com/150"
+        }
+        setOwnerData(intel);
+        } catch (error) {
+          console.error("Erreur chargement agents:", error);
+        }
+      };
+      if (token) {
+        getInfos();
+      }
+    }, [token]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,8 +77,21 @@ export default function OwnerProfile() {
     fileInputRef.current.click();
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    const response = await fetch('http://127.0.0.1:8000/api/utilisateurs/update-profile', {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    });
+    const data = await response.json();
+    setFormData({
+      email: data.email,
+      phone: data.telephone,
+    });
     const updatedData = {
       ...formData,
       profileImage: tempImage || ownerData.profileImage
