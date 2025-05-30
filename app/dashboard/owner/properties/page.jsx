@@ -7,6 +7,7 @@ export default function OwnerPropertiesPage() {
   const [properties, setProperties] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isMobile, setIsMobile] = useState(false);
+  const [token, setToken] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
@@ -22,45 +23,39 @@ export default function OwnerPropertiesPage() {
   }, []);
 
   useEffect(() => {
+    setToken(sessionStorage.getItem('auth_token'));
+  }, []);
+
+  useEffect(() => {
     const fetchOwnerProperties = async () => {
       try {
-        const mockProperties = [
-          {
-            id: 1,
-            title: 'Villa moderne à Dakar',
-            address: 'Rue des Jardins, Almadies',
-            type: 'maison',
-            price: 75000000,
-            published: true,
-            image: '/villa.jpg'
-          },
-          {
-            id: 2,
-            title: 'Appartement à louer',
-            address: 'Avenue Moussa Tavele, Dakar',
-            type: 'appartement',
-            price: 200000,
-            published: false,
-            image: '/appartement.jpg'
-          },
-          {
-            id: 3,
-            title: 'Terrain à vendre',
-            address: 'Route de l\'aéroport, Dakar',
-            type: 'terrain',
-            price: 15000000,
-            published: true,
-            image: '/terrain.jpg'
+        const response = await fetch('http://127.0.0.1:8000/api/BienImmobilier/get-biens', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept' : 'application/json'
           }
-        ];
-        setProperties(mockProperties);
+        });
+        const data = await response.json();
+        const mappedProperties = data.map((item) => ({
+          id: item.idImmobilier,
+          title: item.titre,
+          address: item.adresse,
+          type: item.type,
+          price: item.montant,
+          published: item.statut == 'disponible' ? true : false,
+          image: item.images?.[0]?.chemin
+        }));
+        setProperties(mappedProperties);
       } catch (error) {
         console.error('Error:', error);
       }
     };
 
-    fetchOwnerProperties();
-  }, []);
+    if (token) {
+      fetchOwnerProperties();
+    }
+  }, [token]);
 
   const togglePublishStatus = (propertyId) => {
     setProperties(properties.map(prop => 
@@ -145,7 +140,7 @@ export default function OwnerPropertiesPage() {
                   <div className="flex items-center">
                     <div className="flex-shrink-0 h-10 w-10 rounded-md bg-gray-100 flex items-center justify-center">
                       {property.image ? (
-                        <img src={property.image} alt={property.title} className="h-full w-full object-cover rounded-md" />
+                        <img src={`http://127.0.0.1:8000${property.image}`} alt={property.title} className="h-full w-full object-cover rounded-md" />
                       ) : (
                         <FiHome className="text-gray-500" />
                       )}
