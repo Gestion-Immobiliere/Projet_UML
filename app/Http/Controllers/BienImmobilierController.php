@@ -9,10 +9,14 @@ use Illuminate\Support\Facades\Log;
 class BienImmobilierController extends Controller
 {
     // Lister tous les biens immobiliers
-    public function index()
-    {
-        return response()->json(BienImmobilier::all());
-    }
+    public function index(Request $request){
+        $user = $request->user();
+        $biens = BienImmobilier::with('images')->where(function ($query) use ($user) {
+            $query->where('idAgent', $user->idUser)
+                  ->orWhere('idAdmin', $user->idUser);
+        })->get();
+        return response()->json($biens);
+    } 
 
     // Afficher un bien immobilier par ID
     public function show($id)
@@ -37,20 +41,18 @@ class BienImmobilierController extends Controller
             'adresse' => 'required|string',
             'montant' => 'required|numeric',
             'type' => 'required|string',
-            'datePublication' => 'required|date',
             'surface' => 'required|numeric',
             'nombreChambres' => 'required|integer',
             'nombreSalleBains' => 'required|integer',
         ]);
-    
+
         // $user = auth()->user();
         $user = $request->user();
-        Log::info('Role connecté : ' . $user->role);
-    
+
         if ($user->role === 'admin') {
-            $validated['idAdmin'] = $user->id;
+            $validated['idAdmin'] = $user->idUser;
         } elseif ($user->role === 'agent_immobilier') {
-            $validated['idAgent'] = $user->id;
+            $validated['idAgent'] = $user->idUser;
         }
         Log::info('idAdmin injecté : ' . ($validated['idAdmin'] ?? 'non défini'));
 
@@ -58,22 +60,18 @@ class BienImmobilierController extends Controller
         if (!isset($validated['idAdmin']) && !isset($validated['idAgent'])) {
             return response()->json(['message' => 'Seuls les agents ou les admins peuvent créer un bien.'], 403);
         }
-    
-        if (!isset($validated['idContrat'])) {
-            $validated['idContrat'] = null;
-        }
-    
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('images', 'public');
-            $validated['image'] = "/storage/" . $path;
-        }
-        Log::info('Contenu de $validated', $validated);
-        Log::info('User connecté', ['id' => $user->id, 'role' => $user->role]);
-        Log::info('Validated final', $validated);
-        
-    
+        $validated['datePublication'] = now();
         $bien = BienImmobilier::create($validated);
-        return response()->json($bien, 201);
+
+        // Gérer les images multiples
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('images', 'public');
+                $bien->images()->create(['chemin' => '/storage/' . $path]);
+            }
+        }
+
+        return response()->json($bien->load('images'), 201);
     }
     
     

@@ -70,7 +70,7 @@ Route::middleware(['auth:sanctum', 'checkRole:locataire'])->post('reserve', [Res
 //Routes pour la gestion des biens immobiliers 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::prefix('BienImmobilier')->group(function () {
-        Route::get('/', [BienImmobilierController::class, 'index']);
+        Route::get('/get-biens', [BienImmobilierController::class, 'index'])->middleware('checkRole:agent_immobilier,admin');;
         Route::get('/{id}', [BienImmobilierController::class, 'show']);
         Route::post('/store', [BienImmobilierController::class, 'store'])->middleware('checkRole:agent_immobilier,admin');
         Route::put('/{id}', [BienImmobilierController::class, 'update'])->middleware('checkRole:agent_immobilier,admin');
