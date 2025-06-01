@@ -18,14 +18,9 @@ class ReserveController extends Controller
                 'message' => 'Ce bien est deja reserve'
             ], 400);
         } else {
-            $reserve = Paiement::create([
-                'idImmobilier' => $request->id_bien,
-                'idLocatire' => $user->idUser,
-                'datePaiement' => now()
-            ]);
+            return response()->json([
+                'message' => 'Nous allons vous rediriger vers la page de paiement'
+            ],200);
         }
-        return response()->json([
-            'message' => $reserve
-        ], 200);
     }
 }

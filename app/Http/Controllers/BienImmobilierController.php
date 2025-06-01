@@ -9,10 +9,14 @@ use Illuminate\Http\Request;
 class BienImmobilierController extends Controller
 {
     // Lister tous les biens immobiliers
-    public function index()
-    {
-        return response()->json(BienImmobilier::with('images')->get());
-    }
+    public function index(Request $request){
+        $user = $request->user();
+        $biens = BienImmobilier::with('images')->where(function ($query) use ($user) {
+            $query->where('idAgent', $user->idUser)
+                  ->orWhere('idAdmin', $user->idUser);
+        })->get();
+        return response()->json($biens);
+    } 
 
     // Afficher un bien immobilier par ID
     public function show($id)
@@ -37,24 +41,24 @@ class BienImmobilierController extends Controller
             'adresse' => 'required|string',
             'montant' => 'required|numeric',
             'type' => 'required|string',
-            'datePublication' => 'required|date',
             'surface' => 'required|numeric',
             'nombreChambres' => 'required|integer',
             'nombreSalleBains' => 'required|integer',
         ]);
 
-        $user = auth()->user();
+        // $user = auth()->user();
+        $user = $request->user();
 
         if ($user->role === 'admin') {
-            $validated['idAdmin'] = $user->id;
+            $validated['idAdmin'] = $user->idUser;
         } elseif ($user->role === 'agent_immobilier') {
-            $validated['idAgent'] = $user->id;
+            $validated['idAgent'] = $user->idUser;
         }
 
         if (!isset($validated['idAdmin']) && !isset($validated['idAgent'])) {
             return response()->json(['message' => 'Seuls les agents ou les admins peuvent créer un bien.'], 403);
         }
-
+        $validated['datePublication'] = now();
         $bien = BienImmobilier::create($validated);
 
         // Gérer les images multiples
