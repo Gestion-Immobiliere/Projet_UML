@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Support\Facades\Log;
 use App\Models\BienImmobilier;
 use App\Models\Image;
 use Illuminate\Http\Request;
@@ -17,16 +17,58 @@ class BienImmobilierController extends Controller
         })->get();
         return response()->json($biens);
     } 
+//fonction pour recuperer les biens sans connexion
+    public function publicIndex()
+{
+    $biens = BienImmobilier::with('images')->get();
+    return response()->json($biens);
+}
+
+//fonctions pour recuperer les details des biens publiquement
+public function publicShow($id)
+{
+    $bien = BienImmobilier::with('images')->find($id);
+
+    if (!$bien) {
+        return response()->json(['message' => 'Bien introuvable'], 404);
+    }
+
+    return response()->json($bien);
+}
+
 
     // Afficher un bien immobilier par ID
-    public function show($id)
-    {
-        $bien = BienImmobilier::with('images')->find($id);
-        if (!$bien) {
-            return response()->json(['message' => 'Bien immobilier non trouvé'], 404);
-        }
-        return response()->json($bien);
+  public function show($id)
+{
+    $bien = BienImmobilier::with(['images', 'agent', 'admin'])->find($id);
+
+    if (!$bien) {
+        return response()->json(['message' => 'Bien immobilier non trouvé'], 404);
     }
+
+    // On détermine automatiquement l'auteur du bien (agent ou admin)
+    $bien->auteur = $bien->agent ?? $bien->admin;
+
+    return response()->json($bien);
+}
+
+public function showPublic($id)
+{
+    $bien = BienImmobilier::with(['images', 'agent', 'admin'])->find($id);
+
+    if (!$bien) {
+        return response()->json(['message' => 'Bien immobilier non trouvé'], 404);
+    }
+
+    $data = $bien->toArray();
+    $data['auteur'] = $bien->agent ?? $bien->admin;
+
+    return response()->json($data);
+}
+
+
+   
+
 
     // Ajouter un bien immobilier (Agent/Admin uniquement)
     public function store(Request $request)
@@ -121,23 +163,42 @@ class BienImmobilierController extends Controller
         return response()->json(['message' => 'Bien immobilier supprimé avec succès']);
     }
 
-    // Filtrer les biens immobiliers par type, statut ou localisation
-    public function filter(Request $request)
-    {
+   // Filtrer les biens immobiliers par type, statut, localisation, nombre de chambres et prix minimum
+ public function filter(Request $request)
+{
+    \Log::info('Filter Request Parameters:', $request->all());
+    try {
         $query = BienImmobilier::with('images');
 
-        if ($request->has('type')) {
+        if ($request->has('type') && $request->input('type')) {
             $query->where('type', $request->input('type'));
+            \Log::info('Applied type filter:', ['type' => $request->input('type')]);
         }
-
-        if ($request->has('statut')) {
+        if ($request->has('statut') && $request->input('statut')) {
             $query->where('statut', $request->input('statut'));
+            \Log::info('Applied statut filter:', ['statut' => $request->input('statut')]);
         }
-
-        if ($request->has('localisation')) {
+        if ($request->has('localisation') && $request->input('localisation')) {
             $query->where('localisation', 'like', '%' . $request->input('localisation') . '%');
+            \Log::info('Applied localisation filter:', ['localisation' => $request->input('localisation')]);
+        }
+        if ($request->has('nombreChambres') && is_numeric($request->input('nombreChambres')) && $request->input('nombreChambres') > 0) {
+            $nombreChambres = (int) $request->input('nombreChambres');
+            $query->where('nombreChambres', '>=', $nombreChambres);
+            \Log::info('Applied nombreChambres filter:', ['nombreChambres' => $nombreChambres]);
+        }
+        if ($request->has('montant') && is_numeric($request->input('montant')) && $request->input('montant') > 0) {
+            $montant = (float) $request->input('montant');
+            $query->where('montant', '>=', $montant);
+            \Log::info('Applied montant filter:', ['montant' => $montant]);
         }
 
-        return response()->json($query->get());
+        $results = $query->get();
+        \Log::info('Filter Query Results:', ['count' => $results->count(), 'data' => $results->toArray()]);
+        return response()->json($results);
+    } catch (\Exception $e) {
+        \Log::error('Filter Error:', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+        return response()->json(['message' => 'Erreur serveur'], 500);
     }
+}
 }

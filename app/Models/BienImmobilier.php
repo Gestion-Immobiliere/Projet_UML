@@ -33,4 +33,15 @@ class BienImmobilier extends Model
 {
     return $this->hasMany(Image::class, 'bien_id');
 }
+
+ //pour recuperer l'agent ou l'admin dans propertiedetails dans le front
+    public function agent()
+{
+    return $this->belongsTo(Utilisateur::class, 'idAgent', 'idUser');
+}
+
+public function admin()
+{
+    return $this->belongsTo(Utilisateur::class, 'idAdmin', 'idUser');
+}
 }

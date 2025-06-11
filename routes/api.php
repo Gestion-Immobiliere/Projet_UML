@@ -15,15 +15,19 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\BienImmobilierController;
 use App\Http\Controllers\AuthUtilisateursController;
 
-//Route pour les messages
+// Public property routes
+Route::get('/biens-publics', [BienImmobilierController::class, 'publicIndex']);
+Route::get('/biens-publics/filter', [BienImmobilierController::class, 'filter']); // Moved before {id}
+Route::get('/biens-publics/{id}', [BienImmobilierController::class, 'publicShow']); // Only one {id} route
+
+// Messages
 Route::middleware('auth:sanctum')->post('message', [ChatController::class, 'store']);
 Route::middleware('auth:sanctum')->post('chat', [ChatController::class, 'index']);
 
-// Route pour les Utilisateurs
+// Users
 Route::prefix('utilisateurs')->group(function () {
     Route::post('/register', [AuthUtilisateursController::class, 'register']);
     Route::post('/login', [AuthUtilisateursController::class, 'login']);
-
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthUtilisateursController::class, 'logout']);
         Route::get('/profile', [UtilisateursController::class, 'profile']);
@@ -33,66 +37,60 @@ Route::prefix('utilisateurs')->group(function () {
     });
 });
 
-// Routes réservées aux Admins uniquement
+// Admin
 Route::middleware(['auth:sanctum', 'checkRole:admin'])->group(function () {
     Route::get('/admin/dashboard', function () {
         return response()->json(['message' => 'Bienvenue Admin']);
     });
 });
 
-// Routes réservées aux Agents immobiliers uniquement
+// Agent
 Route::middleware(['auth:sanctum', 'checkRole:agent_immobilier'])->group(function () {
     Route::get('/agent/dashboard', function () {
         return response()->json(['message' => 'Bienvenue Agent Immobilier']);
     });
 });
 
-// Routes réservées aux Locataires uniquement
+// Tenant
 Route::middleware(['auth:sanctum', 'checkRole:locataire'])->group(function () {
     Route::get('/locataire/dashboard', function () {
         return response()->json(['message' => 'Bienvenue Locataire']);
     });
 });
 
-//Route pour verifier l'adresse mail
+// Email verification
 Route::post('verify-mail', [VerifyMailController::class, 'verify']);
 
-//Routes de réinitialisation du mot de passe 
+// Password reset
 Route::post('/utilisateurs/forgot-password', [PasswordResetController::class, 'forgot']);
 Route::post('/utilisateurs/reset-password/{token}', [PasswordResetController::class, 'reset']);
 
-//Route pour la gestion des avis
+// Reviews
 Route::middleware(['auth:sanctum', 'checkRole:locataire'])->post('evaluate', [EvaluateController::class, 'evaluate']);
 
-//Route pour la reservation
+// Reservations
 Route::middleware(['auth:sanctum', 'checkRole:locataire'])->post('reserve', [ReserveController::class, 'reserve']);
 
-//Routes pour la gestion des biens immobiliers 
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::prefix('BienImmobilier')->group(function () {
-        Route::get('/get-biens', [BienImmobilierController::class, 'index'])->middleware('checkRole:agent_immobilier,admin');;
-        Route::get('/{id}', [BienImmobilierController::class, 'show']);
-        Route::post('/store', [BienImmobilierController::class, 'store'])->middleware('checkRole:agent_immobilier,admin');
-        Route::put('/{id}', [BienImmobilierController::class, 'update'])->middleware('checkRole:agent_immobilier,admin');
-        Route::delete('/{id}', [BienImmobilierController::class, 'destroy'])->middleware('checkRole:admin');
-        Route::get('/filter', [BienImmobilierController::class, 'filter']);
-    });
+// Authenticated property routes
+Route::middleware(['auth:sanctum'])->prefix('BienImmobilier')->group(function () {
+    Route::get('/get-biens', [BienImmobilierController::class, 'index'])->middleware('checkRole:agent_immobilier,admin');
+    Route::get('/{id}', [BienImmobilierController::class, 'show']);
+    Route::post('/store', [BienImmobilierController::class, 'store'])->middleware('checkRole:agent_immobilier,admin');
+    Route::put('/{id}', [BienImmobilierController::class, 'update'])->middleware('checkRole:agent_immobilier,admin');
+    Route::delete('/{id}', [BienImmobilierController::class, 'destroy'])->middleware('checkRole:admin');
 });
 
-//Route pour la gestion des favoris
-Route::middleware(['auth:sanctum', 'checkRole:locataire'])->post('/add-favoris', [FavorisController::class, 'add']);
-Route::middleware(['auth:sanctum', 'checkRole:locataire'])->get('/get-favoris', [FavorisController::class, 'index']); 
-Route::middleware(['auth:sanctum', 'checkRole:locataire'])->delete('/delete-favoris', [FavorisController::class, 'destroy']); 
+// Favorites
+Route::middleware(['auth:sanctum', 'checkRole:locataire'])->group(function () {
+    Route::post('/add-favoris', [FavorisController::class, 'add']);
+    Route::get('/get-favoris', [FavorisController::class, 'index']);
+    Route::delete('/delete-favoris', [FavorisController::class, 'destroy']);
+});
 
-//Routes pour les contrats
+// Contracts
 Route::middleware(['auth:sanctum', 'checkRole:agent_immobilier,admin'])->post('/contrats', [ContratController::class, 'store']);
-
-//Validation du contrat (case à cocher)
 Route::middleware(['auth:sanctum', 'checkRole:locataire'])->put('/contrats/{id}/accepter', [ContratController::class, 'accepter']);
+Route::middleware(['auth:sanctum', 'checkRole:admin,agent_immobilier,locataire'])->get('/contrats/{id}/telecharger', [ContratController::class, 'telecharger']);
 
-//Route pour telecharger le pdf
-Route::middleware(['auth:sanctum', 'checkRole:admin,agent_immobilier,locataire'])
-    ->get('/contrats/{id}/telecharger', [ContratController::class, 'telecharger']);
-
-// Route pour le paiement
+// Payment
 Route::post('/payment', [PaiementController::class, 'processPayment']);
